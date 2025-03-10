@@ -47,29 +47,38 @@ public class DataCollection {
         }
     }
 
+    private static double parseDoubleSafely(String str) {
+        return parseSafely(str, Double::parseDouble, 0.0);
+    }
+
+    private static int parseIntegerSafely(String str) {
+        return parseSafely(str, Integer::parseInt, 0);
+    }
+
+    // Generic helper method to parse strings to either integers or doubles safely
+    private static <T> T parseSafely(String str, java.util.function.Function<String, T> parser, T defaultValue) {
+        try {
+            return parser.apply(str);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     // Use comma as the separator in CSV
     private static Track parseTrack(String line) {
         String[] fields = line.split(",");
-
-        double parseDoubleSafely(String str) {
-            try {
-                return Double.parseDouble(str);
-            } catch (NumberFormatException e) {
-                return 0.0;  // Return a default value for invalid entries
-            }
-        }
 
         return new Track(
                 fields[0],
                 fields[1],
                 fields[2],
-                Arrays.asList(fields[3].split(";")),  // Artists (split if multiple)
-                Integer.parseInt(fields[4]),
-                Integer.parseInt(fields[5]),
-                Arrays.asList(fields[6].split(";")),  // Genres (split if multiple)
+                Arrays.asList(fields[3].split(";")),  // artists (split if multiple)
+                parseIntegerSafely(fields[4]),
+                parseIntegerSafely(fields[5]),
+                Arrays.asList(fields[6].split(";")),  // genres (split if multiple)
                 parseDoubleSafely(fields[7]),
                 parseDoubleSafely(fields[8]),
-                Integer.parseInt(fields[9]),
+                parseIntegerSafely(fields[9]),
                 parseDoubleSafely(fields[10]),
                 parseDoubleSafely(fields[11]),
                 parseDoubleSafely(fields[12]),
@@ -77,8 +86,7 @@ public class DataCollection {
                 parseDoubleSafely(fields[14]),
                 parseDoubleSafely(fields[15]),
                 parseDoubleSafely(fields[16]),
-                Integer.parseInt(fields[17])
+                parseIntegerSafely(fields[17])
         );
     }
-
 }
