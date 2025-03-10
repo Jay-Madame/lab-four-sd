@@ -50,25 +50,35 @@ public class DataCollection {
     // Use comma as the separator in CSV
     private static Track parseTrack(String line) {
         String[] fields = line.split(",");
+
+        double parseDoubleSafely(String str) {
+            try {
+                return Double.parseDouble(str);
+            } catch (NumberFormatException e) {
+                return 0.0;  // Return a default value for invalid entries
+            }
+        }
+
         return new Track(
                 fields[0],
                 fields[1],
                 fields[2],
-                List.of(fields[3].split(";")),  // Artists (split if multiple; changed separator to semicolon)
+                Arrays.asList(fields[3].split(";")),  // Artists (split if multiple)
                 Integer.parseInt(fields[4]),
                 Integer.parseInt(fields[5]),
-                List.of(fields[6].split(";")),  // Genres (split if multiple)
-                Double.parseDouble(fields[7]),
-                Double.parseDouble(fields[8]),
+                Arrays.asList(fields[6].split(";")),  // Genres (split if multiple)
+                parseDoubleSafely(fields[7]),
+                parseDoubleSafely(fields[8]),
                 Integer.parseInt(fields[9]),
-                Double.parseDouble(fields[10]),
-                Double.parseDouble(fields[11]),
-                Double.parseDouble(fields[12]),
-                Double.parseDouble(fields[13]),
-                Double.parseDouble(fields[14]),
-                Double.parseDouble(fields[15]),
-                Double.parseDouble(fields[16]),
+                parseDoubleSafely(fields[10]),
+                parseDoubleSafely(fields[11]),
+                parseDoubleSafely(fields[12]),
+                parseDoubleSafely(fields[13]),
+                parseDoubleSafely(fields[14]),
+                parseDoubleSafely(fields[15]),
+                parseDoubleSafely(fields[16]),
                 Integer.parseInt(fields[17])
         );
     }
+
 }
