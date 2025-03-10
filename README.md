@@ -3,6 +3,7 @@
 ## Jewell Callahan
 
 ### Objective
+
 <p>
 Objective: To take in a dataset and collect information [ ]<br>
 <br>
@@ -19,3 +20,7 @@ Song information can include:
 <li>Energy</li>
 </ul>
 
+## File Guides
+
+DataCollection - console test (includes main)
+DataViewer - GUI test (includes main)
