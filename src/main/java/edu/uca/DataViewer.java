@@ -39,12 +39,13 @@ public class DataViewer {
     }
 
     private static void printConsoleData(List<DataItem> dataItems) {
+        // Print specific item attributes (consolidating repeated logic into one method)
         System.out.println("First item attributes:");
-        printAttributes(dataItems, 0);
+        printItemAttributes(dataItems, 0);
 
         if (dataItems.size() >= 10) {
             System.out.println("\nTenth item attributes:");
-            printAttributes(dataItems, 9);
+            printItemAttributes(dataItems, 9);
         } else {
             System.out.println("\nDataset has less than 10 items.");
         }
@@ -52,7 +53,8 @@ public class DataViewer {
         System.out.println("\nTotal number of entries: " + dataItems.size());
     }
 
-    private static void printAttributes(List<DataItem> dataItems, int index) {
+    // Consolidated method to print item attributes (console and GUI)
+    private static void printItemAttributes(List<DataItem> dataItems, int index) {
         if (index < dataItems.size()) {
             System.out.println(String.join(", ", dataItems.get(index).attributes));
         } else {
@@ -65,6 +67,18 @@ public class DataViewer {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 400);
 
+        // Use common logic to populate table
+        DefaultTableModel tableModel = createTableModel(dataItems);
+
+        JTable table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        frame.add(scrollPane, BorderLayout.CENTER);
+        frame.setVisible(true);
+    }
+
+    // Helper method to create table model
+    private static DefaultTableModel createTableModel(List<DataItem> dataItems) {
         String[] columnNames = {"Column1", "Column2", "Column3"}; // Adjust as needed
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
 
@@ -72,10 +86,6 @@ public class DataViewer {
             tableModel.addRow(item.attributes);
         }
 
-        JTable table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
-
-        frame.add(scrollPane, BorderLayout.CENTER);
-        frame.setVisible(true);
+        return tableModel;
     }
 }
