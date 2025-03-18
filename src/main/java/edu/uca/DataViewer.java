@@ -3,89 +3,106 @@ package edu.uca;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DataViewer {
-    private static final String FILE_NAME = "src/main/resources/familyFriendlyPlaylist.csv"; // Change this to your actual file name
+    private static final String FILE_NAME = "src/main/resources/familyFriendlyPlaylist.csv";
+
+    private JTable table;
+    private DefaultTableModel tableModel;
+    private DetailPanel detailPanel;
+    private StatsPanel statsPanel;
+    private ChartPanelComponent chartPanel;
 
     public static void main(String[] args) {
-        List<DataItem> dataItems = loadData(FILE_NAME);
-        if (dataItems.isEmpty()) {
-            System.out.println("No data found.");
-            return;
-        }
-
-        // Console Test Application
-        printConsoleData(dataItems);
-
-        // GUI Test Application
-        SwingUtilities.invokeLater(() -> createAndShowGUI(dataItems));
+        SwingUtilities.invokeLater(() -> new DataViewer().createAndShowGUI());
     }
 
-    private static List<DataItem> loadData(String fileName) {
-        List<DataItem> dataItems = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] attributes = line.split(","); // Assuming CSV format
-                dataItems.add(new DataItem(attributes));
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
-        }
-        return dataItems;
-    }
-
-    private static void printConsoleData(List<DataItem> dataItems) {
-        // Print specific item attributes (consolidating repeated logic into one method)
-        System.out.println("First item attributes:");
-        printItemAttributes(dataItems, 0);
-
-        if (dataItems.size() >= 10) {
-            System.out.println("\nTenth item attributes:");
-            printItemAttributes(dataItems, 9);
-        } else {
-            System.out.println("\nDataset has less than 10 items.");
-        }
-
-        System.out.println("\nTotal number of entries: " + dataItems.size());
-    }
-
-    // Consolidated method to print item attributes (console and GUI)
-    private static void printItemAttributes(List<DataItem> dataItems, int index) {
-        if (index < dataItems.size()) {
-            System.out.println(String.join(", ", dataItems.get(index).attributes));
-        } else {
-            System.out.println("Index out of bounds.");
-        }
-    }
-
-    private static void createAndShowGUI(List<DataItem> dataItems) {
-        JFrame frame = new JFrame("Data Viewer");
+    private void createAndShowGUI() {
+        JFrame frame = new JFrame("Music Data Viewer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 400);
+        frame.setSize(800, 600);
 
-        // Use common logic to populate table
-        DefaultTableModel tableModel = createTableModel(dataItems);
+        List<Track> tracks = DataCollection.loadTracks(FILE_NAME);
 
-        JTable table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
+        // Create components
+        detailPanel = new DetailPanel();
+        statsPanel = new StatsPanel();
+        chartPanel = new ChartPanelComponent();
 
-        frame.add(scrollPane, BorderLayout.CENTER);
+        // Table setup
+        tableModel = createTableModel(tracks);
+        table = new JTable(tableModel);
+        table.getSelectionModel().addListSelectionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                detailPanel.updateDetails(tracks.get(selectedRow));
+            }
+        });
+
+        // Filter panel
+        JPanel filterPanel = new JPanel(new BorderLayout());
+        JTextField filterField = new JTextField();
+        filterField.addActionListener(e -> applyFilter(tracks, filterField.getText()));
+        filterPanel.add(filterField, BorderLayout.CENTER);
+        JButton clearFilterButton = new JButton("Clear");
+        clearFilterButton.addActionListener(e -> resetFilter(tracks));
+        filterPanel.add(clearFilterButton, BorderLayout.EAST);
+
+        // Layout
+        frame.setLayout(new BorderLayout());
+        frame.add(new JScrollPane(table), BorderLayout.CENTER);
+        frame.add(filterPanel, BorderLayout.NORTH);
+        frame.add(detailPanel, BorderLayout.EAST);
+        frame.add(statsPanel, BorderLayout.SOUTH);
+        frame.add(chartPanel, BorderLayout.WEST);
+
+        updateStatsAndChart(tracks);
+
         frame.setVisible(true);
     }
 
-    // Helper method to create table model
-    private static DefaultTableModel createTableModel(List<DataItem> dataItems) {
-        String[] columnNames = {"Column1", "Column2", "Column3"}; // Adjust as needed
-        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
-
-        for (DataItem item : dataItems) {
-            tableModel.addRow(item.attributes);
+    private DefaultTableModel createTableModel(List<Track> tracks) {
+        String[] columnNames = {"Track", "Artist", "Popularity"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+        for (Track track : tracks) {
+            model.addRow(new Object[]{
+                    track.getTrackName(),
+                    String.join(", ", track.getGenres()),
+                    track.getPopularity()
+            });
         }
+        return model;
+    }
 
-        return tableModel;
+    private void applyFilter(List<Track> originalTracks, String query) {
+        List<Track> filteredTracks = originalTracks.stream()
+                .filter(t -> t.getTrackName().toLowerCase().contains(query.toLowerCase()))
+                .collect(Collectors.toList());
+
+        updateTable(filteredTracks);
+        updateStatsAndChart(filteredTracks);
+    }
+
+    private void resetFilter(List<Track> originalTracks) {
+        updateTable(originalTracks);
+        updateStatsAndChart(originalTracks);
+    }
+
+    private void updateTable(List<Track> tracks) {
+        tableModel.setRowCount(0);
+        for (Track track : tracks) {
+            tableModel.addRow(new Object[]{
+                    track.getTrackName(),
+                    String.join(", ", track.getGenres()),
+                    track.getPopularity()
+            });
+        }
+    }
+
+    private void updateStatsAndChart(List<Track> tracks) {
+        statsPanel.updateStats(tracks);
+        chartPanel.updateChart(tracks);
     }
 }
