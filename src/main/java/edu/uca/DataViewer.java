@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 
 public class DataViewer {
     private static final String FILE_NAME = "src/main/resources/familyFriendlyPlaylist.csv";
-
     private JTable table;
     private DefaultTableModel tableModel;
     private DetailPanel detailPanel;
     private StatsPanel statsPanel;
     private ChartPanelComponent chartPanel;
+    private PlayerControls playerControls;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new DataViewer().createAndShowGUI());
@@ -50,12 +50,27 @@ public class DataViewer {
         clearFilterButton.addActionListener(e -> resetFilter(tracks));
         filterPanel.add(clearFilterButton, BorderLayout.EAST);
 
-        // Layout
+        playerControls = new PlayerControls();
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(statsPanel, BorderLayout.CENTER);
+        bottomPanel.add(playerControls, BorderLayout.SOUTH);
+
+        // Update table selection listener
+        table.getSelectionModel().addListSelectionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                Track selectedTrack = tracks.get(selectedRow);
+                detailPanel.updateDetails(selectedTrack);
+                playerControls.setCurrentTrack(selectedTrack);
+            }
+        });
+
+        // Update layout
         frame.setLayout(new BorderLayout());
         frame.add(new JScrollPane(table), BorderLayout.CENTER);
         frame.add(filterPanel, BorderLayout.NORTH);
         frame.add(detailPanel, BorderLayout.EAST);
-        frame.add(statsPanel, BorderLayout.SOUTH);
+        frame.add(bottomPanel, BorderLayout.SOUTH); // Updated this line
         frame.add(chartPanel, BorderLayout.WEST);
 
         updateStatsAndChart(tracks);
